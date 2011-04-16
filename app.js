@@ -4,8 +4,15 @@
  */
 
 var express = require('express');
+var mongoose = require('mongoose');
+var models = require('./models.js');
+
+models.defineModels(mongoose);
 
 var app = module.exports = express.createServer();
+
+mongoose.connect('mongodb://localhost/nodepad');
+var Document = mongoose.model('Document');
 
 // Configuration
 
