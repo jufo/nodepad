@@ -391,4 +391,31 @@ Things are working. Could refactor controller methods out into a separate module
 
 Could have directories for controllers and models, rather than having files floating around in the root directory.
 
+Part 5
+
+http://dailyjs.com/2010/12/06/node-tutorial-5/
+https://github.com/alexyoung/nodepad/tree/03fe9b272fea1beb98ffefcf5f7ed226c81c49fd
+
+Adding users, authentication, authorisation.
+
+Start with models.
+
+On to application.
+
+Requests for specific documents are not checked for ownership.
+
+$ sudo npm install connect-mongodb
+
+I have the express setting to compile less stylesheets now. Copy the less stylesheet across.
+Running the app doesn't overwrite style.css - REVISIT.
+
+Tests have been updated (and the old ones unsurprisingly fail) - try those.
+Also, my timeout hack isn't working, presumably because the session implementation has its own database connection open.
+(Yes, I see that close when I interrupt the test.)
+
+All the assertion failures reference HTML POST /documents - which is the last test executed.
+And they all (except the first) have the same stack trace.
+
+These tests won't all work - there is no way of providing the session. Move on.
+
 

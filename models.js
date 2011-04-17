@@ -57,14 +57,17 @@ function defineModels(mongoose) {
         return validateLength(this.email) && validateLength(this.password);
     });
     
-    // TODO: use User.pre('save', function(next) {...})
-    User.method('save', function(okFn, failedFn) {
-        if (this.isValid()) {
-            this.__super__(okFn);
+    User.pre('save', function(next) {
+        if (!validateLength(this.email)) {
+            next(new Error('Invalid email'));
+        } else if (!validateLength(this.password)) {
+            next(new Error('Invalid password'));
         } else {
-            failedFn();
+            next();
         }
     });
+    
+    mongoose.model('User', User);
 }
 
 exports.defineModels = defineModels;

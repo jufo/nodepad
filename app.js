@@ -14,11 +14,12 @@ var express = require('express'),
 // Converts a database connection URI string to
 // the format connect-mongodb expects
 function mongoStoreConnectionArgs() {
-  return { dbname: db.db.databaseName,
-           host: db.db.serverConfig.host,
-           port: db.db.serverConfig.port,
-           username: db.uri.username,
-           password: db.uri.password };
+    var conn = mongoose.connection;
+    return { dbname: conn.db.databaseName,
+             host: conn.db.serverConfig.host,
+             port: conn.db.serverConfig.port,
+             username: conn.uri.username,
+             password: conn.uri.password };
 }
 
 app.configure('development', function() {
@@ -40,10 +41,8 @@ app.configure(function() {
     app.use(express.favicon());
     app.set('view engine', 'jade');
     app.use(express.bodyParser());
-    app.use(express.cookieDecoder());
-    app.use(express.session({
-      store: mongoStore(mongoStoreConnectionArgs())
-    }));
+    app.use(express.cookieParser());
+    app.use(express.session({ store: mongoStore(app.set('db-uri')), secret: 'topsecret' }));
     app.use(express.logger({ format: '\x1b[1m:method\x1b[0m \x1b[33m:url\x1b[0m :response-time ms' }))
     app.use(express.methodOverride());
     app.use(express.compiler({ src: __dirname + '/public', enable: ['less'] }));
@@ -53,12 +52,12 @@ app.configure(function() {
     models.defineModels(mongoose);
     app.mongoose = mongoose;  // TODO: use app.set
     app.Document = Document = mongoose.model('Document');
-    app.User = User = require('./models.js').User(db);
+    app.User = User = mongoose.model('User');
 });
 
 function loadUser(req, res, next) {
     if (req.session.user_id) {
-        User.findById(req.session.user_id, function(user) {
+        User.findById(req.session.user_id, function(err, user) {
             if (user) {
                 req.currentUser = user;
                 next();
@@ -205,7 +204,7 @@ app.get('/sessions/new', function(req, res) {
 });
 
 app.post('/sessions', function(req, res) {
-    User.find({ email: req.body.user.email }).first(function(err, user) {
+    User.findOne({ email: req.body.user.email }, function(err, user) {
         if (user && user.authenticate(req.body.user.password)) {
             req.session.user_id = user.id;
             res.redirect('/documents');
