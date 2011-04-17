@@ -117,21 +117,6 @@ setTimeout(function() {
 
 
 var newTests = {
-  'Test document index': function(beforeExit) {
-    assert.response(app, {
-        url: '/documents.json',
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
-      }, {
-        status: 200,
-      },
-
-      function (res) {
-        console.log(res.body);
-      }
-    );
-  },
-
   'POST /documents.json': function(beforeExit) {
     assert.response(app, {
         url: '/documents.json',
