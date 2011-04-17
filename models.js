@@ -1,9 +1,15 @@
+var crypto = require('crypto');
+
 function defineModels(mongoose) {
     
-    var Document = new mongoose.Schema({
-        title: {type: String, index: true},
+    var Schema = mongoose.Schema,
+        ObjectId = Schema.ObjectId;
+    
+    var Document = new Schema({
+        title: { type: String, index: true },
         data: String,
-        tags: [String]
+        tags: [String],
+        user_id: { type: ObjectId, index: true }
     });
     
     Document.virtual('id').get(function() {
@@ -11,6 +17,54 @@ function defineModels(mongoose) {
     });
     
     mongoose.model('Document', Document);
+    
+    function validateLength(s) {
+        return s && s.length > 0 && s.length < 255
+    }
+    
+    var User = new Schema({
+        email: { type: String, unique: true },
+        salt: String,
+        hashed_password: String
+    });
+    
+    User.virtual('id').get(function() {
+        return this._id.toHexString();
+    });
+    
+    User.virtual('password').get(function() {
+        return this._password;
+    }).set(function(password) {
+        this._password = password;
+        this.salt = this.makeSalt();
+        this.hashed_password = this.hashPassword(password);        
+    });
+    
+    User.method('authenticate', function(password) {
+        return this.hashPassword(password) === this.hashed_password;
+    });
+    
+    User.method('makeSalt', function() {
+        return Math.round((new Date().valueOf() * Math.random())) + '';        
+    });
+
+    User.method('hashPassword', function(password) {
+        return crypto.createHmac('sha1', this.salt).update(password).digest('hex');       
+    });
+    
+    User.method('isValid', function() {
+        // TODO: Better validation
+        return validateLength(this.email) && validateLength(this.password);
+    });
+    
+    // TODO: use User.pre('save', function(next) {...})
+    User.method('save', function(okFn, failedFn) {
+        if (this.isValid()) {
+            this.__super__(okFn);
+        } else {
+            failedFn();
+        }
+    });
 }
 
 exports.defineModels = defineModels;

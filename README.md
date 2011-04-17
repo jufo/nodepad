@@ -5,7 +5,7 @@ This is my copy of the nodepad tutorial from dailyjs.com.
 http://dailyjs.com/tags.html#lmawa
 
 Parts 1 and 2
-------
+-------------
 
 Ended up using sudo to install the npm modules (sort this out later).
 Needed to add ~/node_modules/.bin to my PATH.
