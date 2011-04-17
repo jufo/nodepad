@@ -1,0 +1,394 @@
+Running through the "Let's Make a Web App: Nodepad" series of tutorials on dailyjs.com, on my MacBook Air.
+
+Install node.js
+
+
+$ git clone https://github.com/joyent/node.git
+$ cd node
+$ ./configure
+$ make
+$ sudo make install
+
+Install npm
+
+$ git clone http://github.com/isaacs/npm.git
+$ cd npm
+$ sudo make install
+
+Check
+
+$ which npm
+/usr/local/bin/npm
+$ which node
+/usr/local/bin/node
+$ node --version
+v0.5.0-pre
+$ npm --version
+1.0.1rc9
+
+MongoDB
+
+$ sudo port install mongodb
+
+Taking a long time... while that's going, try out node:
+
+$ node
+> var http = require('http');
+> http.createServer(function(req, res) {
+... res.writeHead(200, {'Content-Type': 'text/plain'});
+... res.end('Hello World\n');
+... }).listen(8124, '127.0.0.1');
+> 
+
+In another Terminal session:
+
+$ ab -n 1000 -c 100 'http://127.0.0.1:8124/'
+This is ApacheBench, Version 2.3 <$Revision: 655654 $>
+Copyright 1996 Adam Twiss, Zeus Technology Ltd, http://www.zeustech.net/
+Licensed to The Apache Software Foundation, http://www.apache.org/
+
+Benchmarking 127.0.0.1 (be patient)
+Completed 100 requests
+Completed 200 requests
+Completed 300 requests
+Completed 400 requests
+Completed 500 requests
+Completed 600 requests
+Completed 700 requests
+Completed 800 requests
+Completed 900 requests
+Completed 1000 requests
+Finished 1000 requests
+
+
+Server Software:       
+Server Hostname:        127.0.0.1
+Server Port:            8124
+
+Document Path:          /
+Document Length:        12 bytes
+
+Concurrency Level:      100
+Time taken for tests:   0.279 seconds
+Complete requests:      1000
+Failed requests:        0
+Write errors:           0
+Total transferred:      76000 bytes
+HTML transferred:       12000 bytes
+Requests per second:    3584.40 [#/sec] (mean)
+Time per request:       27.899 [ms] (mean)
+Time per request:       0.279 [ms] (mean, across all concurrent requests)
+Transfer rate:          266.03 [Kbytes/sec] received
+
+Connection Times (ms)
+              min  mean[+/-sd] median   max
+Connect:        0    8   5.2      7      19
+Processing:     3   19   7.9     17      40
+Waiting:        2   16   7.8     13      39
+Total:          7   27   6.6     27      45
+
+Percentage of the requests served within a certain time (ms)
+  50%     27
+  66%     28
+  75%     31
+  80%     32
+  90%     35
+  95%     37
+  98%     42
+  99%     44
+ 100%     45 (longest request)
+
+Wait till mongodb is built and try again.
+
+$ ab -n 1000 -c 100 'http://127.0.0.1:8124/'
+This is ApacheBench, Version 2.3 <$Revision: 655654 $>
+Copyright 1996 Adam Twiss, Zeus Technology Ltd, http://www.zeustech.net/
+Licensed to The Apache Software Foundation, http://www.apache.org/
+
+Benchmarking 127.0.0.1 (be patient)
+Completed 100 requests
+Completed 200 requests
+Completed 300 requests
+Completed 400 requests
+Completed 500 requests
+Completed 600 requests
+Completed 700 requests
+Completed 800 requests
+Completed 900 requests
+Completed 1000 requests
+Finished 1000 requests
+
+
+Server Software:       
+Server Hostname:        127.0.0.1
+Server Port:            8124
+
+Document Path:          
+Document Length:        12 bytes
+
+Concurrency Level:      100
+Time taken for tests:   0.193 seconds
+Complete requests:      1000
+Failed requests:        0
+Write errors:           0
+Total transferred:      76228 bytes
+HTML transferred:       12036 bytes
+Requests per second:    5187.93 [#/sec] (mean)
+Time per request:       19.276 [ms] (mean)
+Time per request:       0.193 [ms] (mean, across all concurrent requests)
+Transfer rate:          386.20 [Kbytes/sec] received
+
+Connection Times (ms)
+              min  mean[+/-sd] median   max
+Connect:        0    2   1.3      1       8
+Processing:     1   17   7.8     17      36
+Waiting:        1   16   7.4     16      35
+Total:          2   19   7.5     19      36
+
+Percentage of the requests served within a certain time (ms)
+  50%     19
+  66%     22
+  75%     24
+  80%     25
+  90%     28
+  95%     32
+  98%     33
+  99%     34
+ 100%     36 (longest request)
+
+
+MongoDB is installed - create its data directory:
+
+$ mkdir -p /data/db
+
+$ which mongod
+/opt/local/bin/mongod
+$ which mongo
+/opt/local/bin/mongo
+
+
+Try mongodb out: In one Terminal,
+$ mongod
+
+In another:
+$ mongo
+MongoDB shell version: 1.6.6-pre-
+connecting to: test
+> db.foo.save( { a : 1 } )
+> db.foo.find()
+{ "_id" : ObjectId("4da94bb13219c150030970e3"), "a" : 1 }
+> db.foo.save( { a : 2 } )
+> db.foo.find()
+{ "_id" : ObjectId("4da94bb13219c150030970e3"), "a" : 1 }
+{ "_id" : ObjectId("4da94c133219c150030970e4"), "a" : 2 }
+> 
+
+Ctrl-D to exit
+
+In the mongod session, Ctrl-C to exit.
+
+Now install required npm packages:
+
+$ sudo npm install express mongoose jade less expresso
+(I used sudo because it initially failed without it - REVISIT)
+
+$ which express
+$ npm list
+/Users/justin
+├─┬ express@2.2.2
+│ ├─┬ connect@1.3.0
+│ │ ├── mime@1.2.1
+│ │ └── qs@0.1.0
+│ ├── mime@1.2.1
+│ └── qs@0.1.0
+├── expresso@0.7.5
+├── jade@0.10.4
+├── less@1.0.41
+└── mongoose@1.2.0 
+
+Node and npm have man files.
+
+The binary for express is in ~/node-modules/express/bin
+
+$ man npm-folders
+...
+
+   Executables
+       When in global mode, executables are linked into prefix/bin.
+       When  in  local  mode,  executables  are  linked into prefix/node_mod-
+       ules/.bin.
+
+$ ls node_modules/.bin
+
+express          expresso     jade          lessc          node-jscoverage
+
+Create .bashrc containing
+export PATH=~/node_modules/.bin:$PATH
+
+Create .bash_login containing
+source .bashrc
+
+Now, in a new Terminal
+$ cd Projects
+$ express nodepad
+   create : nodepad
+   create : nodepad/app.js
+   create : nodepad/views
+   create : nodepad/views/layout.jade
+   create : nodepad/views/index.jade
+   create : nodepad/public/stylesheets
+   create : nodepad/public/stylesheets/style.css
+   create : nodepad/public/javascripts
+   create : nodepad/logs
+   create : nodepad/pids
+   create : nodepad/public/images
+   create : nodepad/test
+   create : nodepad/test/app.test.js
+   - make sure you have installed jade: $ npm install jade
+
+$ cd nodepad
+$ git init
+$ git add .
+$ git commit -m "Initial commit."
+
+Add a README.md file in the root, containing:
+
+Nodepad
+=======
+
+This is my copy of the nodepad tutorial from dailyjs.com.
+
+Add and commit this.
+Now link up to GitHub and push to there.
+
+Create repository on GitHub (from dashboard) - name 'nodepad'
+git remote add origin git@github.com:jufo/nodepad.git
+git push -u origin master
+
+Counting objects: 14, done.Delta compression using up to 2 threads.
+Compressing objects: 100% (10/10), done.
+Writing objects: 100% (14/14), 1.69 KiB, done.
+Total 14 (delta 1), reused 0 (delta 0)
+To git@github.com:jufo/nodepad.git
+ * [new branch]      master -> master
+Branch master set up to track remote branch master from origin.
+
+It's there! https://github.com/jufo/nodepad
+
+Now browse the project in TextMate, and try running it.
+
+$ mate .
+$ node app.js
+
+http://localhost:3000/
+
+...it works!
+
+There are a few changes in the skeleton since the tutorial was written (8 Nov 2010).
+
+Now on to the bit about Mongoose. I can look at the source tree for a particular point in history. Start at 2010-11-08
+
+https://github.com/alexyoung/nodepad
+https://github.com/alexyoung/nodepad/tree/4ea936b4b426012528fc722c7576391b48d5a0b7
+
+I can download the zip for that branch.
+
+alexyoung-nodepad-4ea936b
+
+Mongoose has changed a lot. Part 12 shows this (7 Feb 2011).
+Also read the Mongoose documentation at http://mongoosejs.com
+Fuller schema example is in examples/schema.js
+API documentation shows existence of methods property on Schema.
+
+Use a simpler approach - export defineModels from models.js; this is a function that takes mongoose as its parameter.
+
+Don't need to pass anything back, as we can get the models from mongoose.
+
+Now I can run, and see MongoDB creating the collection and adding the index.
+
+Enough for another commit and push.
+
+$ git status
+$ git add .
+$ git status
+$ git commit -m "Added model and mongoose."
+$ git push -u origin master
+
+I have tabs rather than spaces in models.js - must correct that.
+
+Fixed that. I can just use 
+
+$ git push
+
+For straightforward updates I should probably skip "git add ." and use:
+
+$ git status
+$ git commit -a -m "message"
+$ git push
+
+On to part 3 
+
+http://dailyjs.com/2010/11/15/node-tutorial-3/
+
+https://github.com/alexyoung/nodepad/commit/39e66cb9d11a67044495beb0de1934ac4d9c4786
+
+Download the zip, unzip, open in TextMate
+
+Alex is putting more (e.g. connecting to the database) in the configuration sections.
+I shall put defining the models in there too.
+
+Common configuration runs before environment-specific configuration.
+Development is the default environment.
+
+Document is now in app.Document, not in the var. Oops, no - it's in both.
+
+Now I can start on the REST API for Document.
+List is hanging, or returning an empty response.
+This is better (from looking at Mongoose home page, and later models.js version:
+
+// Document list
+app.get('/documents.:format', function(req, res) {
+    Document.find({}, function(err, documents) {
+        switch (req.params.format) {
+            case 'json':
+                res.send(documents.map(function(d) {
+                    return d.toObject();
+                }));
+                break;
+            default:
+                res.render('documents/index.jade');
+        }
+    });
+});
+
+Note that we don't have that template yet.
+
+Now look at the test for creation.
+Needed to correct the callback being used when removing listed documents.
+Now I just have one failure, on the content type of the redirect response - I don't think I care about that.
+(Expected text/plain, got text/html)
+
+Why does it wait for Ctrl-C before giving summary?
+Is it because my app is listening?
+No - it logs when it's listening.
+
+Trying a trivial test, just the require of the app makes it hang.
+There's discussion here: https://github.com/visionmedia/expresso/issues/29
+
+For now I am just putting in a timeout, and making the mongoose connection accessible to the test.
+
+Closing the connection allows everything to finish up and the process to exit.
+Probably wouldn't work with multiple test files.
+
+On to Part 4!
+
+http://dailyjs.com/2010/11/22/node-tutorial-4/
+https://github.com/alexyoung/nodepad/tree/f66fdb5c3bebdf693f62884ffc06a40b93328bb5
+
+No optimistic concurrency control.
+
+Things are working. Could refactor controller methods out into a separate module.
+
+Could have directories for controllers and models, rather than having files floating around in the root directory.
+
+

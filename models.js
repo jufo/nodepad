@@ -6,6 +6,10 @@ function defineModels(mongoose) {
         tags: [String]
     });
     
+    Document.virtual('id').get(function() {
+        return this._id.toHexString();
+    });
+    
     mongoose.model('Document', Document);
 }
 

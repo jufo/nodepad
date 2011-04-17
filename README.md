@@ -2,8 +2,9 @@ Nodepad
 =======
 
 This is my copy of the nodepad tutorial from dailyjs.com.
+http://dailyjs.com/tags.html#lmawa
 
-Part 1
+Parts 1 and 2
 ------
 
 Ended up using sudo to install the npm modules (sort this out later).
@@ -13,5 +14,10 @@ Then creating the application using express worked fine.
 
 Mongoose has changed a lot. Referred to Part 12 to see what changes Alex had made.
 What I have here is simpler.
+
+Parts 3 and 4
+-------------
+
+More notes are in notes.txt
 
 

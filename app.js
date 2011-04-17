@@ -40,14 +40,13 @@ app.configure('test', function() {
 
 // Routes
 
-app.get('/', function(req, res){
-    res.render('index', {
-        title: 'Express'
-    });
+// Redirect from / to documents list
+app.get('/', function(req, res) {
+  res.redirect('/documents')
 });
 
 // Document list
-app.get('/documents.:format', function(req, res) {
+app.get('/documents.:format?', function(req, res) {
     Document.find({}, function(err, documents) {
         switch (req.params.format) {
             case 'json':
@@ -56,9 +55,22 @@ app.get('/documents.:format', function(req, res) {
                 }));
                 break;
             default:
-                res.render('documents/index.jade');
+                res.render('documents/index', { documents: documents });
         }
     });
+});
+
+app.get('/documents/:id.:format?/edit', function(req, res) {
+    console.log('Id: ' + req.params.id);
+    Document.findById(req.params.id, function(err, d) {
+        console.log('err: ' + err);
+        console.log('d: ' + d);
+        res.render('documents/edit', { d: d });
+    });
+});
+
+app.get('/documents/new', function(req, res) {
+    res.render('documents/new', { d: new Document() });
 });
 
 // Create document 
@@ -78,22 +90,49 @@ app.post('/documents.:format?', function(req, res) {
 
 // Read document
 app.get('/documents/:id.:format?', function(req, res) {
-    res.render('index', {
-        title: 'Get ' + req.params.id
+    Document.findById(req.params.id, function(err, d) {
+        switch (req.params.format) {
+            case 'json':
+                res.send(d.__doc);
+                break;
+
+            default:
+                res.render('documents/show.jade', { d: d });
+        }
     });
 });
 
 // Update document
 app.put('/documents/:id.:format?', function(req, res) {
-    res.render('index', {
-        title: 'Put ' + req.params.id
+    Document.findById(req.body.document.id, function(err, d) {
+        d.title = req.body.document.title;
+        d.data = req.body.document.data;
+        d.save(function(err) {
+            switch (req.params.format) {
+                case 'json':
+                    res.send(d.__doc);
+                    break;
+
+                default:
+                    res.redirect('/documents');
+            }
+        });
     });
 });
 
 // Delete document
 app.del('/documents/:id.:format?', function(req, res) {
-    res.render('index', {
-        title: 'Delete ' + req.params.id
+    Document.findById(req.params.id, function(err, d) {
+        d.remove(function(err) {
+            switch (req.params.format) {
+                case 'json':
+                    res.send('true');
+                    break;
+
+                default:
+                    res.redirect('/documents');
+            } 
+        });
     });
 });
 
