@@ -11,19 +11,9 @@ var express = require('express'),
 
 // Configuration
 
-// Converts a database connection URI string to
-// the format connect-mongodb expects
-function mongoStoreConnectionArgs() {
-    var conn = mongoose.connection;
-    return { dbname: conn.db.databaseName,
-             host: conn.db.serverConfig.host,
-             port: conn.db.serverConfig.port,
-             username: conn.uri.username,
-             password: conn.uri.password };
-}
-
 app.configure('development', function() {
     app.set('db-uri', 'mongodb://localhost/nodepad-development');
+    app.use(express.errorHandler({ dumpExceptions: true }));  
 });
 
 app.configure('test', function() {
@@ -46,7 +36,7 @@ app.configure(function() {
     app.use(express.logger({ format: '\x1b[1m:method\x1b[0m \x1b[33m:url\x1b[0m :response-time ms' }))
     app.use(express.methodOverride());
     app.use(express.compiler({ src: __dirname + '/public', enable: ['less'] }));
-    app.use(app.router);
+//    app.use(app.router);
     app.use(express.static(__dirname + '/public'));
 
     models.defineModels(mongoose);
@@ -77,6 +67,42 @@ app.get('/', loadUser, function(req, res) {
   res.redirect('/documents')
 });
 
+// Error handling
+function NotFound(msg) {
+    this.name = 'NotFound';
+    Error.call(this, msg);
+    Error.captureStackTrace(this, arguments.callee);
+}
+
+sys.inherits(NotFound, Error);
+
+app.get('/404', function(req, res) {
+    throw new NotFound;
+});
+
+app.get('/500', function(req, res) {
+    throw new Error('An expected error');
+});
+
+app.get('/bad', function(req, res) {
+    unknownMethod();
+});
+
+app.error(function(err, req, res, next) {
+    if (err instanceof NotFound) {
+        res.render('404', { status: 404 });
+    } else {
+        next(err);
+    }
+});
+
+app.error(function(err, req, res) {
+    res.render('500', {
+      status: 500,
+      locals: { error: err } 
+    });
+});
+
 // Document list
 app.get('/documents.:format?', loadUser, function(req, res) {
     Document.find({}, function(err, documents) {
@@ -94,11 +120,10 @@ app.get('/documents.:format?', loadUser, function(req, res) {
     });
 });
 
-app.get('/documents/:id.:format?/edit', loadUser, function(req, res) {
-    console.log('Id: ' + req.params.id);
+app.get('/documents/:id.:format?/edit', loadUser, function(req, res, next) {
     Document.findById(req.params.id, function(err, d) {
-        console.log('err: ' + err);
-        console.log('d: ' + d);
+        if (!d) return next(new NotFound('Document not found'));
+        
         res.render('documents/edit', { d: d, currentUser: req.currentUser });
     });
 });
@@ -123,8 +148,10 @@ app.post('/documents.:format?', loadUser, function(req, res) {
 });
 
 // Read document
-app.get('/documents/:id.:format?', loadUser, function(req, res) {
+app.get('/documents/:id.:format?', loadUser, function(req, res, next) {
     Document.findById(req.params.id, function(err, d) {
+        if (!d) return next(new NotFound('Document not found'));
+        
         switch (req.params.format) {
             case 'json':
                 res.send(d.toObject());
@@ -137,8 +164,10 @@ app.get('/documents/:id.:format?', loadUser, function(req, res) {
 });
 
 // Update document
-app.put('/documents/:id.:format?', loadUser, function(req, res) {
+app.put('/documents/:id.:format?', loadUser, function(req, res, next) {
     Document.findById(req.body.d.id, function(err, d) {
+        if (!d) return next(new NotFound('Document not found'));
+        
         d.title = req.body.d.title;
         d.data = req.body.d.data;
         d.save(function(err) {
@@ -155,9 +184,10 @@ app.put('/documents/:id.:format?', loadUser, function(req, res) {
 });
 
 // Delete document
-app.del('/documents/:id.:format?', loadUser, function(req, res) {
-    console.log('Delete: ' + req.params.id);
+app.del('/documents/:id.:format?', loadUser, function(req, res, next) {
     Document.findById(req.params.id, function(err, d) {
+        if (!d) return next(new NotFound('Document not found'));
+        
         d.remove(function(err) {
             switch (req.params.format) {
                 case 'json':
