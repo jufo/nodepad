@@ -3,6 +3,7 @@
 var express = require('express'),
     mongoose = require('mongoose'),
     mongoStore = require('connect-mongodb'),
+    sys = require('sys'),
     models = require('./models.js'),
     app = module.exports = express.createServer(),
     Document,
