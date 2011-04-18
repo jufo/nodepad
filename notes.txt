@@ -418,4 +418,56 @@ And they all (except the first) have the same stack trace.
 
 These tests won't all work - there is no way of providing the session. Move on.
 
+Part 6
+
+http://dailyjs.com/2010/12/20/node-tutorial-6/
+https://github.com/alexyoung/nodepad/tree/dd40b5917bf1e59597395425941cc74607110791
+
+jQuery interface
+
+Take a local copy of jQuery-UI 1.8.7, and take the Aristo styles from Alex Young's snapshot.
+
+Update the layout from his.
+
+In app.js, changes in create document and update document.
+
+Lots new in application.js
+
+Big change in views/documents/index.jade
+
+With those changes, will it work?
+
+Styles needed updating - not compiling from less. (Later in the series there's a change to use Stylus, so I shouldn't
+spend time sorting less out.)
+
+Now list and editing of existing note content are OK. New has unstyled page and doesn't appear to save. Delete isn't prompting or working. Double click on note name does nothing.
+Logout (and log in) works.
+
+Items without names are being left in the list.
+
+Changing my .bash_login and .bashrc is stopping me seeing mono and mongod.
+On my MacBook Pro my .bash_login has a line added by MacPorts:
+
+export PATH=/opt/local/bin:/opt/local/sbin:$PATH
+
+Things to debug:
+1. saving a new document - done
+2. deleting a document - no JS hooked up to '-' link - fixed that
+3. updating document title - don't think this was intended to work yet
+4. list content management (view source shows the li and a elements are there, without any content in the a elements) 
+   (bad data - now I can delete, I've removed it)
+5. bad initial data appearing in text area
+
+Saw this problem before:
+div(class='content')
+  div(id='editor-container')
+    textarea(name='d[data]', id='editor')
+      =d && d.data ? d.data : ''
+
+...where the expression at the bottom wasn't evaluated.
+Seems that the = has to line up with the item it belongs to (or putting it on the previous line is OK).
+    textarea(name='d[data]', id='editor')= d && d.data ? d.data : ''
+The = must have no whitespace before it.
+
+But here I don't think there should be server-side initialisation of the text area - the initial selection in the list, and population of the text area, is done by JavaScript.
 

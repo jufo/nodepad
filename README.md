@@ -25,3 +25,8 @@ Part 5
 
 Tests aren't working.
 
+Part 6
+------
+
+With a fix for delete.
+
