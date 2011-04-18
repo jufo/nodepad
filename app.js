@@ -109,11 +109,11 @@ app.get('/documents/new', loadUser, function(req, res) {
 
 // Create document 
 app.post('/documents.:format?', loadUser, function(req, res) {
-    var document = new Document(req.body['document']);
-    document.save(function() {
+    var d = new Document(req.body.d);
+    d.save(function(err) {
         switch (req.params.format) {
             case 'json':
-                res.send(document.toObject());
+                res.send(d.toObject());
                 break;
                  
             default:
@@ -138,9 +138,9 @@ app.get('/documents/:id.:format?', loadUser, function(req, res) {
 
 // Update document
 app.put('/documents/:id.:format?', loadUser, function(req, res) {
-    Document.findById(req.body.document.id, function(err, d) {
-        d.title = req.body.document.title;
-        d.data = req.body.document.data;
+    Document.findById(req.body.d.id, function(err, d) {
+        d.title = req.body.d.title;
+        d.data = req.body.d.data;
         d.save(function(err) {
             switch (req.params.format) {
                 case 'json':
@@ -156,6 +156,7 @@ app.put('/documents/:id.:format?', loadUser, function(req, res) {
 
 // Delete document
 app.del('/documents/:id.:format?', loadUser, function(req, res) {
+    console.log('Delete: ' + req.params.id);
     Document.findById(req.params.id, function(err, d) {
         d.remove(function(err) {
             switch (req.params.format) {
