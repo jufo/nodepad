@@ -169,7 +169,7 @@ app.put('/documents/:id.:format?', loadUser, function(req, res, next) {
     Document.findById(req.body.d.id, function(err, d) {
         if (!d) return next(new NotFound('Document not found'));
         
-        d.title = req.body.d.title;
+        // d.title = req.body.d.title;
         d.data = req.body.d.data;
         d.save(function(err) {
             switch (req.params.format) {
