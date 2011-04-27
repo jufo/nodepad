@@ -30,3 +30,12 @@ Part 6
 
 With a fix for delete.
 
+Part 7
+------
+
+With a fix for update.
+
+Part 8
+------
+
+
