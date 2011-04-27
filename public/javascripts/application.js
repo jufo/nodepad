@@ -19,7 +19,6 @@
         e.preventDefault();
         var id = $('#document-list .selected').itemID(),
             href = $('#document-list .selected').attr('href');
-        console.log('Delete: id ' + id + ' href ' + href);
         if (confirm('Are you sure?')) {
             var form = $('<form></form>');
             form.attr({ method: 'POST',
@@ -74,7 +73,7 @@
         divider.css({ height: height + 'px' });
 
         ed.css({
-            width: content.width() - 5 + 'px',
+            width: content.width() - 20 + 'px',
             height: content.height() - 5 + 'px'
         }).focus();
 
@@ -109,6 +108,21 @@
         });
     });
     
+    $('#html-button').click(function() {
+        var container = $('#html-container');
+        if (container.is(':visible')) {
+            container.html('').hide();
+            $('#html-button').removeClass('active');
+        } else {
+            $('#save-button').click();
+            $('#html-button').addClass('active');
+            var id = $('#document-list .selected').itemID();
+            $.get('/documents/' + id + '.html', function(data) {
+                container.html(data).show();
+            });
+        }
+    });
+
     function hideFlashMessages() {
         $(this).fadeOut();
     }

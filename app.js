@@ -3,6 +3,7 @@
 var express = require('express'),
     mongoose = require('mongoose'),
     mongoStore = require('connect-mongodb'),
+    markdown = require('markdown').markdown,
     sys = require('sys'),
     models = require('./models.js'),
     app = module.exports = express.createServer(),
@@ -40,7 +41,6 @@ app.configure(function() {
     app.use(express.logger({ format: '\x1b[1m:method\x1b[0m \x1b[33m:url\x1b[0m :response-time ms' }))
     app.use(express.methodOverride());
     app.use(express.compiler({ src: __dirname + '/public', enable: ['less'] }));
-//    app.use(app.router);
     app.use(express.static(__dirname + '/public'));
 
     models.defineModels(mongoose);
@@ -196,6 +196,10 @@ app.get('/documents/:id.:format?', loadUser, function(req, res, next) {
         switch (req.params.format) {
             case 'json':
                 res.send(d.toObject());
+                break;
+
+            case 'html':
+                res.send(markdown.toHTML(d.data));
                 break;
 
             default:
