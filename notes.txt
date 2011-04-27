@@ -471,3 +471,99 @@ The = must have no whitespace before it.
 
 But here I don't think there should be server-side initialisation of the text area - the initial selection in the list, and population of the text area, is done by JavaScript.
 
+Check in Part 6.
+
+Error handling on Ajax calls?
+
+Part 7
+http://dailyjs.com/2010/12/27/node-tutorial-7/
+https://github.com/alexyoung/nodepad/tree/929f5642ca1b2fa664df517457e056c92490d892
+
+I'm not going to pin my versions at present, as that would mean going backwards.
+TODO - the explicit versioning.
+
+Add error handling in app.js
+
+Commented out the use of router.
+
+Add error pages.
+Copy over the stylesheets.
+
+Tweak the Jade markup.
+
+Commit before testing. Missing require('sys'). My change to make delete Document work broke Log Out.
+
+Fixed that by reinstating the destroy JS, but when I logged out and came back in I had lost the title of the first Document!
+
+Id 4dab84153cc01d000000001d
+
+Take a look using mongo shell. Confirmed:
+$ mongoMongoDB shell version: 1.8.0
+connecting to: test
+> use nodepad-development
+switched to db nodepad-development
+> show dbs
+
+admin     (empty)
+dev     0.203125GB
+local     (empty)
+nodepad     0.203125GB
+nodepad-development     0.203125GB
+nodepad-test     0.203125GB
+test     0.203125GB
+> show collections
+documents
+system.indexes
+users
+> db.documents.find()
+
+{ "_id" : ObjectId("4dab84153cc01d000000001d"), "data" : "A fluffy friend.", "tags" : [ ], "title" : null }
+{ "tags" : [ ], "_id" : ObjectId("4dab8ca4960a090000000016"), "data" : "rat", "title" : "Rat" }
+{ "tags" : [ ], "_id" : ObjectId("4dab8e11960a0900000000ac"), "data" : "A third document.", "title" : "Three" }
+>
+
+
+Time to take a break. Commit and push Part 7.
+Aha! It's happening when I save a change to the document text (data).
+
+> db.documents.find()
+{ "_id" : ObjectId("4dab84153cc01d000000001d"), "data" : "A fluffy friend.", "tags" : [ ], "title" : null }
+{ "tags" : [ ], "_id" : ObjectId("4dab8ca4960a090000000016"), "data" : "rat", "title" : "Rat" }
+{ "_id" : ObjectId("4dab8e11960a0900000000ac"), "data" : "A third document - number 3.", "tags" : [ ], "title" : null }
+>
+
+
+26th April 2011
+
+Part 8 - Flash and Helpers
+
+http://dailyjs.com/2011/01/03/node-tutorial-8/
+https://github.com/alexyoung/nodepad/tree/df0b954b3c4e83a69ab4cfe2d87f2fb1d0ffa162
+
+Had to learn about JavaScript getters/setters.
+
+27th April 2011
+
+The flash message HTML is being escaped.
+Using != works.
+In the comments, he changes to !{...}
+
+Update via save from index page isn't showing flash, because whole page isn't being re-rendered.
+My fix for save losing titles breaks the REST interface.
+TODO make the Ajax save include the title.
+
+Copied new less stylesheet content across, thereby changing its modification date. Now less compilation kicks in.
+If the less stylesheet is definitive, should the css one be in .gitignore?
+
+Flash message is very hard to read, and icon isn't being displayed. Copy the relevant aristo icons up to public.
+NO - I didn't have the aristo stuff in my project at all!
+Copy it over - now flash message has white background and icon is shown.
+
+Logout flash message is lost when session is destroyed.
+
+Part 9 - Update connect-mongodb (I've done this already) and add Remember Me functionality
+
+http://dailyjs.com/2011/01/10/node-tutorial-9/
+https://github.com/alexyoung/nodepad/tree/1904c6b7f95d708474a5d42e8cdfd40e96243a7a
+
+

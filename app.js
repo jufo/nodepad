@@ -47,7 +47,41 @@ app.configure(function() {
     app.mongoose = mongoose;  // TODO: use app.set
     app.Document = Document = mongoose.model('Document');
     app.User = User = mongoose.model('User');
+    app.LoginToken = LoginToken = mongoose.model('LoginToken');
 });
+
+function authenticateFromLoginToken(req, res, next) {
+    var cookie = JSON.parse(req.cookies.logintoken);
+    
+    var query = { email: cookie.email, 
+                  series: cookie.series, 
+                  token: cookie.token };
+    
+    LoginToken.findOne(query, function(err, token) {
+        if (!token) {
+            res.redirect('/sessions/new');
+            return;
+        }
+        
+        var userQuery = { email: token.email };
+        
+        User.findOne(userQuery, function(err, user) {
+            if (user) {
+                req.session.user_id = user.id;
+                req.currentUser = user;
+                
+                token.save(function(err) {
+                    res.cookie('logintoken', 
+                               token.cookieValue, 
+                               { expires: new Date(Date.now() + 2 * 604800000), path: '/' });
+                    next();
+                });
+            } else {
+                res.redirect('/sessions/new');
+            }
+        });
+    });                      
+}
 
 function loadUser(req, res, next) {
     if (req.session.user_id) {
@@ -59,6 +93,8 @@ function loadUser(req, res, next) {
                 res.redirect('/sessions/new');
             }
         });
+    } else if (req.cookies.logintoken) {
+        authenticateFromLoginToken(req, res, next);
     } else {
         res.redirect('/sessions/new');
     }
@@ -246,7 +282,19 @@ app.post('/sessions', function(req, res) {
     User.findOne({ email: req.body.user.email }, function(err, user) {
         if (user && user.authenticate(req.body.user.password)) {
             req.session.user_id = user.id;
-            res.redirect('/documents');
+            
+            // Remember me
+            if (req.body.remember_me) {
+                var loginToken = new LoginToken({ email: user.email });
+                loginToken.save(function(err) {
+                    res.cookie('logintoken', 
+                               loginToken.cookieValue, 
+                               { expires: new Date(Date.now() + 2 * 604800000), path: '/' });
+                    res.redirect('/documents');
+                });
+            } else {
+                res.redirect('/documents');
+            }
         } else {
             req.flash('error', 'Incorrect credentials');
             res.redirect('/sessions/new');
@@ -256,7 +304,8 @@ app.post('/sessions', function(req, res) {
 
 app.del('/sessions', loadUser, function(req, res) {
     if (req.session) {
-        req.flash('info', 'You are now logged out');
+        LoginToken.remove({ email: req.currentUser.email }, function(err) {});
+        res.clearCookie('logintoken');
         req.session.destroy(function(err) {});
     }
     res.redirect('/sessions/new');
