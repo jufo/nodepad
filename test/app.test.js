@@ -7,24 +7,133 @@ process.env.NODE_ENV = 'test';
 
 var app = require('../app'),
     assert = require('assert'),
-    lastID = '';
+    url = require('url'),
+    lastID = '',
+    cookies = [];
 
+app.on('close', function(errno) { 
+    console.log("********** CLOSED " + errno + " *********")
+});
+    
+function clearCollection(model, callback) {
+    model.remove({}, function(err) {
+        if (err) throw err;
+        callback.call();
+    });
+}
+
+function clearCollections(models, callback) {
+    // Clear collections in parallel, and call the callback
+    // when the last one completes.
+    var toGo = models.length;
+    for (var i = 0; i < models.length; i++) {
+        clearCollection(models[i], function() {
+            if (--toGo === 0) callback.call();
+        });
+    }
+}
+
+function clearDB(callback) {
+    clearCollections([app.Document, app.User, app.LoginToken], callback);
+}
+
+function createTestUser(callback) {
+    new app.User({ email: 'alex@example.com', password: 'test' }).save(function(err) {
+        if (err) throw err;
+        callback.call();
+    });
+}
+
+function login(userEmail, userPassword, callback) {
+    assert.response(app, 
+        { url: '/sessions',
+          method: 'POST',
+          data: JSON.stringify({ user: { email: userEmail, password: userPassword } }),
+          headers: { 'Content-Type': 'application/json' } },
+        { status: 302 },
+        function(res) {
+            cookies = res.headers['set-cookie'];
+            callback.call();
+        });
+}
+    
 module.exports = {
     
-    'Test registration': function(beforeExit) {
+    setup: function(done) {
+        console.log('===== Setup - clearing DB and creating test user =====');
+        clearDB(function() {
+            createTestUser(function() {
+                console.log('Setup complete');
+                done.call();
+            });
+        });
+    },
+    
+    'Test registration': function(done) {
+        console.log('Test registration');
         assert.response(app, 
             { url: '/users.json',
               method: 'POST',
               data: JSON.stringify({ user: { email: 'alex@example.com', password: 'test' } }),
               headers: { 'Content-Type': 'application/json' } }, 
             { status: 200,
-              headers: { 'Content-Type': 'application/json' } },
+              headers: { 'Content-Type': 'application/json; charset=utf-8' } },
             function(res) {
                 var user = JSON.parse(res.body);
                 assert.equal('alex@example.com', user.email);
+                console.log('Test complete');
+                done();
             });
     },
 
+    'Test login': function(done) {
+        console.log('Test login');
+        assert.response(app, 
+            { url: '/sessions',
+              method: 'POST',
+              data: JSON.stringify({ user: { email: 'alex@example.com', password: 'test' } }),
+              headers: { 'Content-Type': 'application/json' } },
+            { status: 302 },
+            function(res) {
+                var redirectUrl = res.headers.location;
+                var redirectPathname = url.parse(redirectUrl).pathname;
+                assert.equal('/documents', redirectPathname);
+                console.log('Test complete');
+                done();
+            });
+    },
+    
+    'HTML POST /documents': function(done) {
+        console.log('HTML POST /documents');
+        login('alex@example.com', 'test', function() {
+            console.log('cookies: ' + cookies);
+            assert.response(app, 
+                           { url: '/documents',
+                             method: 'POST',
+                             data: 'document[title]=test',
+                             headers: { 'Content-Type': 'application/x-www-form-urlencoded',
+                                        'Cookie': cookies }},
+                           { status: 302 },
+                           function(res) {
+                               console.log(res.headers.location);
+                               console.log('Test complete');
+                               done();
+                           });
+        });
+    }
+    
+};
+
+// This is a quick hack to allow the tests to finish and exit.
+setTimeout(function() {
+    process.exit();
+}, 500);
+
+// ----------------
+
+
+
+var newTests = {
     'Test login': function(beforeExit) {
         assert.response(app, 
             { url: '/sessions',
@@ -48,7 +157,6 @@ module.exports = {
     },
 
     'GET /': function() {
-        console.log('>>>>> Test: GET /');
         assert.response(app,
                         { url: '/' },
                         { status: 200, 
@@ -59,7 +167,6 @@ module.exports = {
     },
   
     'GET /documents.json': function() {
-        console.log('>>>>> Test: GET /documents.json');
         assert.response(app,
                         { url: '/documents.json' },
                         { status: 200, 
@@ -79,7 +186,6 @@ module.exports = {
 
   
     'POST /documents.json': function() {
-        console.log('>>>>> Test: POST /documents.json');
         assert.response(app, 
                         { url: '/documents.json',
                           method: 'POST',
@@ -95,7 +201,6 @@ module.exports = {
     },
 
     'HTML POST /documents': function() {
-        console.log('>>>>> Test: HTML POST /documents');
         assert.response(app, 
                         { url: '/documents',
                           method: 'POST',
@@ -103,21 +208,9 @@ module.exports = {
                           headers: { 'Content-Type': 'application/x-www-form-urlencoded' }},
                         { status: 302 }
                        );
-    }
-};
-
-// This is a quick hack to allow the tests to finish and exit.
-setTimeout(function() {
-    console.log("***** C L O S I N G *****");
-    app.mongoose.connection.close();
-}, 2000);
-
-// ----------------
-
-
-
-var newTests = {
-  'POST /documents.json': function(beforeExit) {
+    },
+    
+   'POST /documents.json': function(beforeExit) {
     assert.response(app, {
         url: '/documents.json',
         method: 'POST',

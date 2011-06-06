@@ -38,7 +38,7 @@ app.configure(function() {
     app.use(express.bodyParser());
     app.use(express.cookieParser());
     app.use(express.session({ store: mongoStore(app.set('db-uri')), secret: 'topsecret' }));
-    app.use(express.logger({ format: '\x1b[1m:method\x1b[0m \x1b[33m:url\x1b[0m :response-time ms' }))
+    app.use(express.logger({ format: '\x1b[1m:method\x1b[0m \x1b[33m:url\x1b[0m :response-time ms' }));
     app.use(express.methodOverride());
     app.use(express.compiler({ src: __dirname + '/public', enable: ['less'] }));
     app.use(express.static(__dirname + '/public'));
@@ -104,7 +104,7 @@ function loadUser(req, res, next) {
 
 // Redirect from / to documents list
 app.get('/', loadUser, function(req, res) {
-  res.redirect('/documents')
+  res.redirect('/documents');
 });
 
 // Error handling
@@ -117,7 +117,7 @@ function NotFound(msg) {
 sys.inherits(NotFound, Error);
 
 app.get('/404', function(req, res) {
-    throw new NotFound;
+    throw new NotFound();
 });
 
 app.get('/500', function(req, res) {
